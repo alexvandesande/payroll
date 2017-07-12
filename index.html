@@ -8,7 +8,9 @@
   <link rel="shortcut icon" href="icon.png" type="image/vnd.microsoft.icon">
   <script src="web3.js"></script>
   <script>
-
+  //*******************//
+  //      SCRIPTS      //
+  //*******************//
   var mainAccount, theButton, lastPressed, yourScore, contractAddress, web3;
   var contractABI = [{"constant":true,"inputs":[],"name":"lastPressed","outputs":[{"name":"","type":"uint256","value":"1499870209"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"press","outputs":[],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"presser","type":"address"},{"indexed":false,"name":"pressTime","type":"uint256"},{"indexed":false,"name":"score","type":"uint256"}],"name":"ButtonPress","type":"event"}];
 
@@ -23,8 +25,10 @@
       web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/xb1hnXsk67Yb6pIlVPvv"));
 
       document.getElementById("not-supported").style.display = "block";
-      document.getElementById('theButton').style.opacity = "0.25";
-      document.getElementById('theButton').disabled = true;      
+      document.getElementById('theButton').className = 'clicked';
+      document.getElementById('theButton').disabled = true;    
+      document.getElementById('theButton').textContent = 'Cannot press';
+
     }
 
     document.getElementById('theButton').addEventListener('click', pressButton, false);
@@ -101,8 +105,13 @@
   }
 
   function pressButton() {
+    document.getElementById('theButton').className = 'clicked';
+    document.getElementById('theButton').textContent = 'pressing...';
+
     theButton.press({from: mainAccount}, function(error, result) {
       console.log('button pressed', error, result);
+      document.getElementById('theButton').className = '';
+      document.getElementById('theButton').textContent = 'Press Button';
     })
   }
 
@@ -114,6 +123,9 @@
 
   </script>
   <style>
+      /*******************/
+      /*      STYLES     */
+      /*******************/
 
       #pusher, #add-acount, #not-supported {
         display: none;
@@ -167,7 +179,18 @@
         border: none;
         margin: 20px auto;
         border-radius: 3px;
+        border-top: 0 #000 solid;
         border-bottom: 4px #000 solid;
+        text-transform: uppercase;
+        transition: border 0.8s, margin 0.8s;
+        outline: none; 
+      }
+
+      button.clicked {
+        margin: 24px auto 20px;
+        border-bottom: 0 #000 solid;
+        border-top: 2px #000 solid;
+        transition: border 0.2s, margin 0.2s;        
       }
 
       h1 {
