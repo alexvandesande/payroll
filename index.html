@@ -9,48 +9,53 @@
   <script src="web3.js"></script>
   <script>
 
-  var mainAccount, theButton, lastPressed, yourScore, contractAddress;
+  var mainAccount, theButton, lastPressed, yourScore, contractAddress, web3;
   var contractABI = [{"constant":true,"inputs":[],"name":"lastPressed","outputs":[{"name":"","type":"uint256","value":"1499870209"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"press","outputs":[],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"presser","type":"address"},{"indexed":false,"name":"pressTime","type":"uint256"},{"indexed":false,"name":"score","type":"uint256"}],"name":"ButtonPress","type":"event"}];
 
   function init() {
 
     // Checks Web3 support
     if (typeof web3 !== 'undefined') {
-        // If there isn't then set a provider
-        web3 = new Web3(web3.currentProvider);
-        document.getElementById("non-supported").style.display = "none";
-        document.getElementById("nonpusher").style.display = "block";
-        document.getElementById('theButton').addEventListener('click', pressButton, false);
+      // If there isn't then set a provider
+      web3 = new Web3(web3.currentProvider);
+    } else {
+      // use Infura if it's not there
+      web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/NEefAs8cNxYfiJsYCQjc"))
+      document.getElementById("not-supported").style.display = "block";
+      document.getElementById('theButton').style.display = "none";
+    }
 
-        // get main account
-        // Check if there are available accounts
-        web3.eth.getAccounts(function(e,accounts){ 
-            // show the floating baloon
-            if (e || !accounts || accounts.length == 0) {
-                document.getElementById("add-account").style.display = "block";
-            } else {
-              mainAccount = accounts[0];
-            }
-        });
+    document.getElementById('theButton').addEventListener('click', pressButton, false);
 
-        // Try to load the contract on the mainnet
-        contractAddress = '0xffc2114eB9d604C0Eddbd6932678bf24dEf65606'; 
-        web3.eth.getCode(contractAddress, function(e, r) { 
-            if (!e && r.length > 3) {
-              setup(4010000);    
-            } else {
-              // If it fails, try Rinkeby
-              contractAddress = '0xb0B3F49ef8b6dE7Cddd374d5dab7689b5645F4D5'; 
-              web3.eth.getCode(contractAddress, function(e, r) { 
-                  if (!e && r.length > 3) {
-                    setup(520000);    
-                  } else {
-                    alert("Contract not found on this network");
-                  }
-              }) 
-            }
-        }) 
-    } 
+    // get main account
+    // Check if there are available accounts
+    web3.eth.getAccounts(function(e,accounts){ 
+        // show the floating baloon
+        if (e || !accounts || accounts.length == 0) {
+            document.getElementById("add-account").style.display = "block";
+        } else {
+          mainAccount = accounts[0];
+        }
+    });
+
+    // Try to load the contract on the mainnet
+    contractAddress = '0xffc2114eB9d604C0Eddbd6932678bf24dEf65606'; 
+    web3.eth.getCode(contractAddress, function(e, r) { 
+        if (!e && r.length > 3) {
+          setup(4010000);    
+        } else {
+          // If it fails, try Rinkeby
+          contractAddress = '0xb0B3F49ef8b6dE7Cddd374d5dab7689b5645F4D5'; 
+          web3.eth.getCode(contractAddress, function(e, r) { 
+              if (!e && r.length > 3) {
+                setup(520000);    
+              } else {
+                alert("Contract not found on this network");
+              }
+          }) 
+        }
+    }) 
+     
   }
 
   function setup(deployedAtBlock) {
@@ -102,7 +107,7 @@
   </script>
   <style>
 
-      #nonpusher, #pusher, #add-acount {
+      #pusher, #add-acount, #not-supported {
         display: none;
       }
 
@@ -174,6 +179,11 @@
     <h1 id="countup">loading...</h1>
 
     <button id="theButton">PUSH BUTTON</button>
+
+    <div id="not-supported" class="content not-supported">
+      <h2>This Browser does not support Ethereum apps. </h2> 
+      <a href="http://ethereum.org">Download Mist</a>
+    </div>
   </div>
 
   <div id="pusher" class="content">
@@ -181,17 +191,11 @@
     <h1 id="score">loading...</h1>
   </div>
 
-  <div id="non-supported" class="content not-supported">
-    <h2>This Browser does not support Ethereum apps. </h2> 
-    <a href="http://ethereum.org">Download Mist</a>
-  </div>
-
   <div id="add-account">
     Click here to add an account on Mist
   </div>
 
 
-  <!-- <script src="https://raw.githubusercontent.com/ethereum/web3.js/0.16.0/dist/web3.min.js"></script> -->
   <script type="text/javascript">
    function autorun(){
       init();
