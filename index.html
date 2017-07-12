@@ -9,9 +9,7 @@
   <script src="web3.js"></script>
   <script>
 
-  var mainAccount, theButton, lastPressed, yourScore;
-  var deployedBlock = 520000;
-  var contractAddress = '0xb0B3F49ef8b6dE7Cddd374d5dab7689b5645F4D5'; 
+  var mainAccount, theButton, lastPressed, yourScore, contractAddress;
   var contractABI = [{"constant":true,"inputs":[],"name":"lastPressed","outputs":[{"name":"","type":"uint256","value":"1499870209"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"press","outputs":[],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"presser","type":"address"},{"indexed":false,"name":"pressTime","type":"uint256"},{"indexed":false,"name":"score","type":"uint256"}],"name":"ButtonPress","type":"event"}];
 
   function init() {
@@ -35,52 +33,66 @@
             }
         });
 
-        // Load the contract
+        // Try to load the contract on the mainnet
+        contractAddress = '0xffc2114eB9d604C0Eddbd6932678bf24dEf65606'; 
         web3.eth.getCode(contractAddress, function(e, r) { 
             if (!e && r.length > 3) {
-                // Load the contract
-                theButton = web3.eth.contract(contractABI).at(contractAddress); 
-                // LogVote is an event on the contract. Read all since block 1 million
-                var buttonPressEvent = theButton.ButtonPress(null, {fromBlock: deployedBlock});
-                
-                // Wait for the events to be loaded
-                buttonPressEvent.watch(function(error, result){
-                    console.log('Button Press!', result.args.pressTime.toFixed(), result.args.presser, result.args.score.toFixed());
-                    if (result.args.presser == mainAccount) {
-                      yourScore = result.args.score.toFixed();
-                      document.getElementById("nonpusher").style.display = "none";
-                      document.getElementById("pusher").style.display = "block";
-                      document.getElementById("score").textContent = yourScore;
-                      document.body.style.backgroundColor = "hsl("+ (256 - yourScore) +", 50%, 50%)";
-
-                    }
-                });
-
+              setup(4010000);    
             } else {
-              alert("Contract not found on this network");
+              // If it fails, try Rinkeby
+              contractAddress = '0xb0B3F49ef8b6dE7Cddd374d5dab7689b5645F4D5'; 
+              web3.eth.getCode(contractAddress, function(e, r) { 
+                  if (!e && r.length > 3) {
+                    setup(520000);    
+                  } else {
+                    alert("Contract not found on this network");
+                  }
+              }) 
             }
         }) 
 
-        // If proposal is valid, start watching the chain
-        web3.eth.filter('latest').watch(function(e, res){
-            if(!e) {
-              theButton.lastPressed(function(error, result) {
-                lastPressed = result.toFixed();
-              })
-                // do something
-            }
-        }); 
-
-        // create interval
-        setInterval(function(){
-          if (lastPressed && !yourScore) {
-            var score = Math.floor((Date.now() - lastPressed * 1000)/1000) % 256;
-            document.getElementById("countup").textContent = score;
-            document.body.style.backgroundColor = "hsl("+ (256 - score) +", 50%, 50%)";
-          }
-        }, 1000)
+        
 
     } 
+  }
+
+  function setup(deployedBlock) {
+    // Load the contract
+    theButton = web3.eth.contract(contractABI).at(contractAddress); 
+    // LogVote is an event on the contract. Read all since block 1 million
+    var buttonPressEvent = theButton.ButtonPress(null, {fromBlock: deployedBlock});
+    
+    // Wait for the events to be loaded
+    buttonPressEvent.watch(function(error, result){
+        console.log('Button Press!', result.args.pressTime.toFixed(), result.args.presser, result.args.score.toFixed());
+        if (result.args.presser == mainAccount) {
+          yourScore = result.args.score.toFixed();
+          document.getElementById("nonpusher").style.display = "none";
+          document.getElementById("pusher").style.display = "block";
+          document.getElementById("score").textContent = yourScore;
+          document.body.style.backgroundColor = "hsl("+ (256 - yourScore) +", 50%, 50%)";
+
+        }
+    });
+
+    // If proposal is valid, start watching the chain
+    web3.eth.filter('latest').watch(function(e, res){
+        if(!e) {
+          theButton.lastPressed(function(error, result) {
+            lastPressed = result.toFixed();
+          })
+            // do something
+        }
+    }); 
+
+    // create interval
+    setInterval(function(){
+      if (lastPressed && !yourScore) {
+        var score = Math.floor((Date.now() - lastPressed * 1000)/1000) % 256;
+        document.getElementById("countup").textContent = score;
+        document.body.style.backgroundColor = "hsl("+ (256 - score) +", 70%, 50%)";
+      }
+    }, 1000)
   }
 
   function pressButton() {
@@ -102,7 +114,7 @@
           font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
           background-size: 100%;
           color: #fefefe;
-          transition: background 0.5s;
+          transition: background 1s;
       }
 
       .content {
