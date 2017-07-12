@@ -23,11 +23,12 @@
       web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/xb1hnXsk67Yb6pIlVPvv"));
 
       document.getElementById("not-supported").style.display = "block";
-      document.getElementById('theButton').style.opacity = "0.7";
+      document.getElementById('theButton').style.opacity = "0.25";
       document.getElementById('theButton').disabled = true;      
     }
 
     document.getElementById('theButton').addEventListener('click', pressButton, false);
+    document.getElementById('try-again').addEventListener('click', tryAgain, false);
 
     // get main account
     // Check if there are available accounts
@@ -103,7 +104,12 @@
     theButton.press({from: mainAccount}, function(error, result) {
       console.log('button pressed', error, result);
     })
+  }
 
+  function tryAgain() {
+    document.getElementById("nonpusher").style.display = "block";  
+    document.getElementById("pusher").style.display = "none"; 
+    yourScore = 0;
   }
 
   </script>
@@ -191,6 +197,7 @@
   <div id="pusher" class="content">
     <h2>You pressed at</h2>
     <h1 id="score">loading...</h1>
+    <a id="try-again">Try again</a>
   </div>
 
   <div id="add-account">
