@@ -50,17 +50,14 @@
               }) 
             }
         }) 
-
-        
-
     } 
   }
 
-  function setup(deployedBlock) {
+  function setup(deployedAtBlock) {
     // Load the contract
     theButton = web3.eth.contract(contractABI).at(contractAddress); 
     // LogVote is an event on the contract. Read all since block 1 million
-    var buttonPressEvent = theButton.ButtonPress(null, {fromBlock: deployedBlock});
+    var buttonPressEvent = theButton.ButtonPress(null, {fromBlock: deployedAtBlock});
     
     // Wait for the events to be loaded
     buttonPressEvent.watch(function(error, result){
