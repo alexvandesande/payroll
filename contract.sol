@@ -1,7 +1,3 @@
-/* 
-Based on a contract built by Vlad and Vitalik for Ether signal
-If you need a license, refer to WTFPL.
-*/
 pragma solidity ^0.4.11;
 contract TheButton {
     uint public lastPressed;
