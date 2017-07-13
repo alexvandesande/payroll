@@ -3,6 +3,7 @@ One Button
 
 A dead simple example ethereum game, for usage as first app for development. Inspired by this [reddit april fools](https://www.reddit.com/r/thebutton/) the Button is just a single button that you can click. A live score is displayed on the page, with a number that increases every second. If anyone clicks the button, the number goes back to 0. If it overflows 255, it goes back to 0. Once you click the button (and the transaction is picked up!), your score is calculated - but be careful, if someone else clicks just before you, the score will go to zero, and therefore so yours. The goal is to have the highest score.
 
+<img src="https://github.com/alexvandesande/one-button/blob/master/screenhot.png?raw=true" size="100">
 
 Workshop
 ========
