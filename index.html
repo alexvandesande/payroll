@@ -11,9 +11,12 @@
   //*******************//
   //      SCRIPTS      //
   //*******************//
+
+  // INITIAL SETUP
   var mainAccount, theButton, lastPressed, yourScore, contractAddress, web3;
   var contractABI = [{"constant":true,"inputs":[],"name":"lastPressed","outputs":[{"name":"","type":"uint256","value":"1499870209"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"press","outputs":[],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"presser","type":"address"},{"indexed":false,"name":"pressTime","type":"uint256"},{"indexed":false,"name":"score","type":"uint256"}],"name":"ButtonPress","type":"event"}];
 
+  // FUNCTION IS EXECUTED ON PAGE LOAD
   function init() {
 
     // Checks Web3 support
@@ -23,7 +26,7 @@
     } else {
       // use Infura if it's not there
       web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/xb1hnXsk67Yb6pIlVPvv"));
-
+      // Hide buttons if it's loading infura
       document.getElementById("not-supported").style.display = "block";
       document.getElementById('theButton').className = 'clicked';
       document.getElementById('theButton').disabled = true;    
@@ -31,11 +34,11 @@
 
     }
 
+    // Allow buttons to be clicked
     document.getElementById('theButton').addEventListener('click', pressButton, false);
     document.getElementById('try-again').addEventListener('click', tryAgain, false);
 
-    // get main account
-    // Check if there are available accounts
+    // Get user's ethereum account
     web3.eth.getAccounts(function(e,accounts){ 
         // show the floating baloon
         if (e || !accounts || accounts.length == 0) {
@@ -51,25 +54,27 @@
         if (!e && r.length > 3) {
           setup(4010000);    
         } else {
-          // If it fails, try Rinkeby
+          // If it fails, try a Rinkeby address
           contractAddress = '0xb0B3F49ef8b6dE7Cddd374d5dab7689b5645F4D5'; 
           web3.eth.getCode(contractAddress, function(e, r) { 
               if (!e && r.length > 3) {
                 setup(520000);    
               } else {
-                alert("Contract not found on this network");
+                // If this one is not found either, then give up
+                document.getElementById("countup").textContent = "Unsupported test network";
               }
           }) 
         }
     }) 
-     
   }
 
+  // This is called when the contract is found
   function setup(deployedAtBlock) {
     // Load the contract
     theButton = web3.eth.contract(contractABI).at(contractAddress); 
-    // LogVote is an event on the contract. Read all since block 1 million
-    var buttonPressEvent = theButton.ButtonPress(null, {fromBlock: deployedAtBlock});
+
+    // This is how you watch for past and current events on the chain
+    var buttonPressEvent = theButton.ButtonPress({presser: mainAccount}, {fromBlock: deployedAtBlock});
     
     // Wait for the events to be loaded
     buttonPressEvent.watch(function(error, result){
@@ -84,17 +89,17 @@
         }
     });
 
-    // If proposal is valid, start watching the chain
+    // This is how you execute an action at every new block
     web3.eth.filter('latest').watch(function(e, res){
         if(!e) {
+          // This is how you read from a smart contract
           theButton.lastPressed(function(error, result) {
             lastPressed = result.toFixed();
           })
-            // do something
         }
     }); 
 
-    // create interval
+    // Animate the score going up
     setInterval(function(){
       if (lastPressed && !yourScore) {
         var score = Math.floor((Date.now() - lastPressed * 1000)/1000) % 256;
@@ -104,10 +109,12 @@
     }, 1000)
   }
 
+  // Actions when you press the button
   function pressButton() {
     document.getElementById('theButton').className = 'clicked';
     document.getElementById('theButton').textContent = 'pressing...';
 
+    // This is how you execute an action on a contract
     theButton.press({from: mainAccount}, function(error, result) {
       console.log('button pressed', error, result);
       document.getElementById('theButton').className = '';
@@ -115,6 +122,7 @@
     })
   }
 
+  // Allows the user to try again with another score
   function tryAgain() {
     document.getElementById("nonpusher").style.display = "block";  
     document.getElementById("pusher").style.display = "none"; 
