@@ -11,7 +11,7 @@ Workshop
 
 Welcome to our app workshop! To get ready, here's what we recommend you do:
 
-1) Go to the [Mist release page](https://github.com/ethereum/mist/releases/tag/v0.9.0) and download the latest version of Mist. On the *Downloads* section, look for a file named `Mist-` followed by your OS
+1) Go to the [Mist release page](https://github.com/ethereum/mist/releases/tag/v0.9.0) and download the latest version of Mist. On the *Downloads* section, look for a file named `Mist-` followed by your OS. Alternatively, here's a direct link for [windows installer](https://www.dropbox.com/s/4kksukm3zzos0s9/Mist-installer-0-9-0.exe?dl=0) and a [mac installer](https://www.dropbox.com/s/j7zqfdsde6colp9/Mist-0.9.0.dmg?dl=0)
 
 2) When the download finishes, run it. If it's the first time opening Mist it will show you a splash screen asking if you want to connect to the Main or Test network. For the purposes of this test, select the test network. Follow the instructions to create an account. If the splash screen is skipped, then go to the app menu, then *develop*, *network* and select *Rinkeby test network*. Leave it while it syncs the network.
 
@@ -27,5 +27,5 @@ Welcome to our app workshop! To get ready, here's what we recommend you do:
 
 8) Sit back and watch the presentation a bit. We'll talk about ethereum, smart contracts and apps. You might know some of this, but it's always nice to get everyone on the same boat
 
-9) Your Mist app should be ready by now (if it's not, then open chrome with Metamask). Point it to https://alexvandesande.github.io/one-button/ and we'll play a game! 
+9) Your Mist app should be ready by now (if it's not, then open chrome with Metamask). Point it to https://alexvandesande.github.io/one-button/ (or better yet, to bzz://a940012fccdd37dfd59f7cf6556ccdfc7b700ce44318724af0301f2d6d4dcb75/ ) and we'll play a game! 
 
