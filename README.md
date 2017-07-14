@@ -27,5 +27,5 @@ Welcome to our app workshop! To get ready, here's what we recommend you do:
 
 8) Sit back and watch the presentation a bit. We'll talk about ethereum, smart contracts and apps. You might know some of this, but it's always nice to get everyone on the same boat
 
-9) Your Mist app should be ready by now (if it's not, then open chrome with Metamask). Point it to https://alexvandesande.github.io/one-button/ (or better yet, to bzz://a940012fccdd37dfd59f7cf6556ccdfc7b700ce44318724af0301f2d6d4dcb75/ ) and we'll play a game! 
+9) Your Mist app should be ready by now (if it's not, then open chrome with Metamask). Point it to https://alexvandesande.github.io/one-button/ —or better yet, try bzz://a940012fccdd37dfd59f7cf6556ccdfc7b700ce44318724af0301f2d6d4dcb75/ —and we'll play a game! 
 
