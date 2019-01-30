@@ -154,18 +154,20 @@
 
         // Animate the score going up
         setInterval(function() {
-          if (lastBalance > 0) {
+          if (currentBalance > 0) {
             currentBalance += balanceSpeed;
             document.getElementById("countup").textContent =
-              "$" + currentBalance.toFixed(6);
+              "$" + currentBalance.toFixed(7);
           }
 
           if (memberBalance > 0) {
             memberBalance += memberBalanceSpeed;
             document.getElementById("canWithdraw").textContent =
-              "$" + memberBalance.toFixed(7);
+              "$" + memberBalance.toFixed(2);
           }
-        }, 10);
+
+          console.log(currentBalance.toFixed(10), memberBalance.toFixed(10));
+        }, 1000);
       }
 
       function prevButtonClick() {
@@ -182,7 +184,7 @@
           console.log(res);
           document.getElementById("activeNum").textContent = activeNum;
           document.getElementById("initials").textContent = res[3];
-          memberBalanceSpeed = res[2].toFixed() / 1000000000000000000;
+          memberBalanceSpeed = res[1].toFixed() / 1000000000000000000;
           memberAddress = res[0];
           payroll.getAmountOwed(memberAddress, function(err, res) {
             console.log(res);
