@@ -1,180 +1,268 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>The Button</title>
-  <meta name="ethereum-dapp-url-bar-style" content="transparent">
-  <link rel="shortcut icon" href="icon.png" type="image/vnd.microsoft.icon">
-  <script src="web3.min.js"></script>
-  <script>
-  //*******************//
-  //      SCRIPTS      //
-  //*******************//
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>The Button</title>
+    <meta name="ethereum-dapp-url-bar-style" content="transparent" />
+    <link rel="shortcut icon" href="icon.png" type="image/vnd.microsoft.icon" />
+    <script src="web3.min.js"></script>
+    <script src="interfaces.js"></script>
+    <script>
+      //*******************//
+      //      SCRIPTS      //
+      //*******************//
 
-  // INITIAL SETUP
-  var mainAccount, theButton, lastPressed, yourScore, contractAddress, web3;
-  var contractABI = [{"constant":true,"inputs":[],"name":"lastPressed","outputs":[{"name":"","type":"uint256","value":"1499870209"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"press","outputs":[],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"presser","type":"address"},{"indexed":false,"name":"pressTime","type":"uint256"},{"indexed":false,"name":"score","type":"uint256"}],"name":"ButtonPress","type":"event"}];
+      // INITIAL SETUP
+      var mainAccount,
+        payroll,
+        web3,
+        compound,
+        dai,
+        payrollAddress = "0xbEC64108259656f62e0e1AF690553436250262bF",
+        compoundAddress = "0x3FDA67f7583380E67ef93072294a7fAc882FD7E7",
+        daiAddress = "0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359",
+        currentBalance = 0,
+        lastBalance = 0,
+        lastUpdate = 0,
+        balanceSpeed = 0.00000001,
+        members = [],
+        memberNum = 0,
+        activeNum = 0,
+        memberBalance = 0,
+        memberBalanceSpeed = 0,
+        memberAddress;
 
-  // FUNCTION IS EXECUTED ON PAGE LOAD
-  function init() {
-
-    // Checks Web3 support
-    if (typeof web3 !== 'undefined') {
-      // If there isn't then set a provider
-      web3 = new Web3(web3.currentProvider);
-    } else {
-      // use Infura if it's not there
-      web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/xb1hnXsk67Yb6pIlVPvv"));
-      // Hide buttons if it's loading infura
-      document.getElementById("not-supported").style.display = "block";
-      document.getElementById('theButton').className = 'clicked';
-      document.getElementById('theButton').disabled = true;    
-      document.getElementById('theButton').textContent = 'Cannot press';
-
-    }
-
-    // Allow buttons to be clicked
-    document.getElementById('theButton').addEventListener('click', pressButton, false);
-    document.getElementById('try-again').addEventListener('click', tryAgain, false);
-
-    // Get user's ethereum account
-    web3.eth.getAccounts(function(e,accounts){ 
-        // show the floating baloon
-        if (e || !accounts || accounts.length == 0) {
-            document.getElementById("add-account").style.display = "block";
+      // FUNCTION IS EXECUTED ON PAGE LOAD
+      function init() {
+        // Checks Web3 support
+        if (typeof web3 !== "undefined") {
+          // If there isn't then set a provider
+          web3 = new Web3(web3.currentProvider);
         } else {
-          mainAccount = accounts[0];
+          // use Infura if it's not there
+          web3 = new Web3(
+            new Web3.providers.HttpProvider(
+              "https://mainnet.infura.io/xb1hnXsk67Yb6pIlVPvv"
+            )
+          );
+          // Hide buttons if it's loading infura
+          document.getElementById("not-supported").style.display = "block";
+          document.getElementById("theButton").className = "clicked";
+          document.getElementById("theButton").disabled = true;
+          document.getElementById("theButton").textContent = "Cannot press";
         }
-    });
 
-    // Try to load the contract on the mainnet
-    contractAddress = '0xffc2114eB9d604C0Eddbd6932678bf24dEf65606'; 
-    web3.eth.getCode(contractAddress, function(e, r) { 
-        if (!e && r.length > 3) {
-          setup(4010000);    
-        } else {
-          // If it fails, try a Rinkeby address
-          contractAddress = '0xb0B3F49ef8b6dE7Cddd374d5dab7689b5645F4D5'; 
-          web3.eth.getCode(contractAddress, function(e, r) { 
-              if (!e && r.length > 3) {
-                setup(520000);    
-              } else {
-                // If this one is not found either, then give up
-                document.getElementById("countup").textContent = "Unsupported test network";
-              }
-          }) 
-        }
-    }) 
-  }
+        // Allow buttons to be clicked
+        document
+          .getElementById("prevButton")
+          .addEventListener("click", prevButtonClick, false);
+        document
+          .getElementById("nextButton")
+          .addEventListener("click", nextButtonClick, false);
+        document
+          .getElementById("withdraw")
+          .addEventListener("click", withdrawClick, false);
+        document
+          .getElementById("payEveryone")
+          .addEventListener("click", payEveryoneClick, false);
 
-  // This is called when the contract is found
-  function setup(deployedAtBlock) {
-    // Load the contract
-    theButton = web3.eth.contract(contractABI).at(contractAddress); 
-
-    // This is how you watch for past and current events on the chain
-    var buttonPressEvent = theButton.ButtonPress({presser: mainAccount}, {fromBlock: deployedAtBlock});
-    
-    // Wait for the events to be loaded
-    buttonPressEvent.watch(function(error, result){
-        console.log('Button Press!', result.args.pressTime.toFixed(), result.args.presser, result.args.score.toFixed());
-        if (result.args.presser == mainAccount) {
-          yourScore = result.args.score.toFixed();
-          document.getElementById("nonpusher").style.display = "none";
-          document.getElementById("pusher").style.display = "block";
-          document.getElementById("score").textContent = yourScore;
-          document.body.style.backgroundColor = "hsl("+ (256 - yourScore) +", 50%, 50%)";
-
-        }
-    });
-
-    // This is how you execute an action at every new block
-    web3.eth.filter('latest').watch(function(e, res){
-        if(!e) {
-          // This is how you read from a smart contract
-          theButton.lastPressed(function(error, result) {
-            lastPressed = result.toFixed();
-          })
-        }
-    }); 
-
-    // Animate the score going up
-    setInterval(function(){
-      if (lastPressed && !yourScore) {
-        var score = Math.floor((Date.now() - lastPressed * 1000)/1000) % 256;
-        document.getElementById("countup").textContent = score;
-        document.body.style.backgroundColor = "hsl("+ (256 - score) +", 70%, 50%)";
+        web3.eth.getCode(payrollAddress, function(e, r) {
+          if (!e && r.length > 3) {
+            setup();
+          } else {
+            // If this one is not found either, then give up
+            document.getElementById("countup").textContent =
+              "Unsupported network";
+          }
+        });
       }
-    }, 1000)
-  }
 
-  // Actions when you press the button
-  function pressButton() {
-    document.getElementById('theButton').className = 'clicked';
-    document.getElementById('theButton').textContent = 'pressing...';
+      // This is called when the contract is found
+      function setup(deployedAtBlock) {
+        // Load the contract
+        payroll = web3.eth.contract(payrollABI).at(payrollAddress);
+        compound = web3.eth.contract(compoundABI).at(compoundAddress);
+        dai = web3.eth.contract(daiABI).at(daiAddress);
 
-    // This is how you execute an action on a contract
-    theButton.press({from: mainAccount}, function(error, result) {
-      console.log('button pressed', error, result);
-      document.getElementById('theButton').className = '';
-      document.getElementById('theButton').textContent = 'Press Button';
-    })
-  }
+        compound.getSupplyBalance(payrollAddress, daiAddress, function(
+          error,
+          result
+        ) {
+          console.log("first balance", result.toFixed());
+          currentBalance = result.toFixed() / 1000000000000000000;
+          lastBalance = currentBalance;
+          lastUpdate = new Date().getTime();
+        });
 
-  // Allows the user to try again with another score
-  function tryAgain() {
-    document.getElementById("nonpusher").style.display = "block";  
-    document.getElementById("pusher").style.display = "none"; 
-    yourScore = 0;
-  }
+        payroll.payrollLength(function(err, res) {
+          memberNum = res.toFixed();
+          console.log(memberNum);
+        });
+        // This is how you watch for past and current events on the chain
+        // var buttonPressEvent = theButton.ButtonPress(
+        //   { presser: mainAccount },
+        //   { fromBlock: deployedAtBlock }
+        // );
 
-  </script>
-  <style>
+        // Wait for the events to be loaded
+        // buttonPressEvent.watch(function(error, result) {
+        //   console.log(
+        //     "Button Press!",
+        //     result.args.pressTime.toFixed(),
+        //     result.args.presser,
+        //     result.args.score.toFixed()
+        //   );
+        //   if (result.args.presser == mainAccount) {
+        //     yourScore = result.args.score.toFixed();
+        //     document.getElementById("nonpusher").style.display = "none";
+        //     document.getElementById("pusher").style.display = "block";
+        //     document.getElementById("score").textContent = yourScore;
+        //     document.body.style.backgroundColor =
+        //       "hsl(" + (256 - yourScore) + ", 50%, 50%)";
+        //   }
+        // });
+
+        // This is how you execute an action at every new block
+        web3.eth.filter("latest").watch(function(e, res) {
+          if (!e) {
+            // This is how you read from a smart contract
+            compound.getSupplyBalance(payrollAddress, daiAddress, function(
+              error,
+              result
+            ) {
+              if (new Date().getTime() - lastUpdate < 1000) return;
+
+              console.log(
+                "expected:",
+                currentBalance,
+                "result:",
+                result.toFixed() / 1000000000000000000,
+                "diff:",
+                currentBalance - result.toFixed() / 1000000000000000000
+              );
+
+              currentBalance = result.toFixed() / 1000000000000000000;
+              balanceSpeed =
+                (currentBalance - lastBalance) /
+                (new Date().getTime() - lastUpdate);
+              lastBalance = currentBalance;
+              lastUpdate = new Date().getTime();
+            });
+          }
+        });
+
+        // Animate the score going up
+        setInterval(function() {
+          if (lastBalance > 0) {
+            currentBalance += balanceSpeed;
+            document.getElementById("countup").textContent =
+              "$" + currentBalance.toFixed(6);
+          }
+
+          if (memberBalance > 0) {
+            memberBalance += memberBalanceSpeed;
+            document.getElementById("canWithdraw").textContent =
+              "$" + memberBalance.toFixed(7);
+          }
+        }, 10);
+      }
+
+      function prevButtonClick() {
+        if (activeNum > 1) activeNum--;
+        updateMember();
+      }
+      function nextButtonClick() {
+        if (activeNum < memberNum - 1) activeNum++;
+        updateMember();
+      }
+      function updateMember() {
+        console.log(activeNum);
+        payroll.payroll(activeNum, function(err, res) {
+          console.log(res);
+          document.getElementById("activeNum").textContent = activeNum;
+          document.getElementById("initials").textContent = res[3];
+          memberBalanceSpeed = res[2].toFixed() / 1000000000000000000;
+          memberAddress = res[0];
+          payroll.getAmountOwed(memberAddress, function(err, res) {
+            console.log(res);
+            memberBalance = res.toFixed() / 1000000000000000000;
+          });
+        });
+      }
+
+      function withdrawClick() {
+        document.getElementById("withdraw").textContent = "pressing...";
+        payroll.paySalary(memberAddress, "clicked via app", {}, function(
+          err,
+          res
+        ) {
+          document.getElementById("withdraw").textContent = "WITHDRAW NOW";
+
+          console.log("withdraw requested");
+        });
+      }
+
+      function payEveryoneClick() {
+        document.getElementById("payEveryone").textContent = "pressing...";
+
+        web3.eth.sendTransaction({ to: payrollAddress, value: 1 }, function(
+          err,
+          res
+        ) {
+          document.getElementById("payEveryone").textContent = "PAY EVERYONE";
+
+          console.log(res);
+        });
+      }
+    </script>
+    <style>
       /*******************/
       /*      STYLES     */
       /*******************/
 
-      #pusher, #add-acount, #not-supported {
+      #pusher,
+      #add-acount,
+      #not-supported {
         display: none;
       }
 
       body {
-          background: hsl(0, 0%, 50%);
-          font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
-          background-size: 100%;
-          color: #fefefe;
-          transition: background 1s;
+        background: linear-gradient(#b6b6ff, #94b9de);
+        font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
+        background-size: cover;
+        color: #fefefe;
+        height: 100 vh;
       }
 
       .content {
-          text-align: center;
-          max-width: 600px;
-          margin: 90px auto;
-          padding: 32px;
+        text-align: center;
+        max-width: 600px;
+        margin: 90px auto;
+        padding: 32px;
       }
 
       #add-account {
-          display: none;
-          background: #333;
-          color: #FFF;
-          position: fixed;
-          top: 90px;
-          right: 32px;
-          padding: 20px 30px;
-          box-shadow: rgba(0,0,0,0.2) 0 2px 8px;    
+        display: none;
+        background: #333;
+        color: #fff;
+        position: fixed;
+        top: 90px;
+        right: 32px;
+        padding: 20px 30px;
+        box-shadow: rgba(0, 0, 0, 0.2) 0 2px 8px;
       }
 
       #add-account:before {
-          display: block;
-          background: #333;
-          transform: rotate(45deg);
-          top: -9px;
-          width: 20px;
-          height: 20px;
-          content: " ";
-          position: absolute;
-          left: 250px;
+        display: block;
+        background: #333;
+        transform: rotate(45deg);
+        top: -9px;
+        width: 20px;
+        height: 20px;
+        content: " ";
+        position: absolute;
+        left: 250px;
       }
 
       button {
@@ -191,58 +279,77 @@
         border-bottom: 4px #000 solid;
         text-transform: uppercase;
         transition: border 0.8s, margin 0.8s;
-        outline: none; 
+        outline: none;
       }
 
       button.clicked {
         margin: 24px auto 20px;
         border-bottom: 0 #000 solid;
         border-top: 2px #000 solid;
-        transition: border 0.2s, margin 0.2s;        
+        transition: border 0.2s, margin 0.2s;
       }
 
-      h1 {
-        font-size: 1000%;
+      button.smallButton {
+        width: 75px;
       }
 
-      h1, h2 {
+      h1,
+      dd {
+        font-size: 500%;
+        font-weight: 100;
+        text-align: left;
+      }
+
+      dt {
+        font-weight: 600;
+        text-align: left;
+        font-size: 150%;
+      }
+
+      h1,
+      h2,
+      dd,
+      dt {
         margin: 0 auto;
       }
-
-  </style>
+    </style>
   </head>
   <body>
+    <div class="content">
+      <h2>Team Balance</h2>
+      <h1 id="countup">loading...</h1>
 
-  <div id="nonpusher" class="content">
-    <h2>Current score</h2>
-    <h1 id="countup">loading...</h1>
+      <button id="payEveryone">PAY EVERYONE</button>
 
-    <button id="theButton">PUSH BUTTON</button>
+      <div id="not-supported" class="content not-supported">
+        <h2>This Browser does not support Ethereum apps.</h2>
+        <a href="http://ethereum.org">Download Mist</a>
+      </div>
 
-    <div id="not-supported" class="content not-supported">
-      <h2>This Browser does not support Ethereum apps. </h2> 
-      <a href="http://ethereum.org">Download Mist</a>
+      <dl id="members">
+        <dt>Member # <span id="activeNum"></span></dt>
+        <dd id="initials"></dd>
+        <dt>Can withdraw now</dt>
+        <dd id="canWithdraw"></dd>
+        <button type="button" name="button" id="prevButton" class="smallButton">
+          prev
+        </button>
+        <button type="button" name="button" id="withdraw">withdraw now</button>
+        <button type="button" name="button" id="nextButton" class="smallButton">
+          next
+        </button>
+      </dl>
     </div>
-  </div>
 
-  <div id="pusher" class="content">
-    <h2>You pressed at</h2>
-    <h1 id="score">loading...</h1>
-    <a id="try-again">Try again</a>
-  </div>
-
-  <div id="add-account">
-    Click here to add an account on Mist
-  </div>
-
-
-  <script type="text/javascript">
-   function autorun(){
-      init();
-   }
-   if (document.addEventListener) document.addEventListener("DOMContentLoaded", autorun, false);
-   else if (document.attachEvent) document.attachEvent("onreadystatechange", autorun);
-   else window.onload = autorun;
-  </script>
+    <script type="text/javascript">
+      function autorun() {
+        init();
+      }
+      if (document.addEventListener)
+        document.addEventListener("DOMContentLoaded", autorun, false);
+      else if (document.attachEvent)
+        document.attachEvent("onreadystatechange", autorun);
+      else window.onload = autorun;
+    </script>
   </body>
 </html>

