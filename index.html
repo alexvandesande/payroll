@@ -26,9 +26,8 @@
         lastBalance = 0,
         lastUpdate = 0,
         balanceSpeed = 0.00000001,
-        members = [],
         memberNum = 0,
-        activeNum = 0,
+        activeNum = 1,
         memberBalance = 0,
         memberBalanceSpeed = 0,
         memberAddress;
@@ -85,6 +84,8 @@
         compound = web3.eth.contract(compoundABI).at(compoundAddress);
         dai = web3.eth.contract(daiABI).at(daiAddress);
 
+        updateMember();
+
         compound.getSupplyBalance(payrollAddress, daiAddress, function(
           error,
           result
@@ -99,29 +100,6 @@
           memberNum = res.toFixed();
           console.log(memberNum);
         });
-        // This is how you watch for past and current events on the chain
-        // var buttonPressEvent = theButton.ButtonPress(
-        //   { presser: mainAccount },
-        //   { fromBlock: deployedAtBlock }
-        // );
-
-        // Wait for the events to be loaded
-        // buttonPressEvent.watch(function(error, result) {
-        //   console.log(
-        //     "Button Press!",
-        //     result.args.pressTime.toFixed(),
-        //     result.args.presser,
-        //     result.args.score.toFixed()
-        //   );
-        //   if (result.args.presser == mainAccount) {
-        //     yourScore = result.args.score.toFixed();
-        //     document.getElementById("nonpusher").style.display = "none";
-        //     document.getElementById("pusher").style.display = "block";
-        //     document.getElementById("score").textContent = yourScore;
-        //     document.body.style.backgroundColor =
-        //       "hsl(" + (256 - yourScore) + ", 50%, 50%)";
-        //   }
-        // });
 
         // This is how you execute an action at every new block
         web3.eth.filter("latest").watch(function(e, res) {
@@ -133,21 +111,16 @@
             ) {
               if (new Date().getTime() - lastUpdate < 1000) return;
 
-              console.log(
-                "expected:",
-                currentBalance,
-                "result:",
-                result.toFixed() / 1000000000000000000,
-                "diff:",
-                currentBalance - result.toFixed() / 1000000000000000000
-              );
-
               currentBalance = result.toFixed() / 1000000000000000000;
               balanceSpeed =
                 (currentBalance - lastBalance) /
                 (new Date().getTime() - lastUpdate);
               lastBalance = currentBalance;
               lastUpdate = new Date().getTime();
+            });
+
+            payroll.getAmountOwed(memberAddress, function(err, res) {
+              memberBalance = res.toFixed() / 1000000000000000000;
             });
           }
         });
@@ -166,7 +139,7 @@
               "$" + memberBalance.toFixed(2);
           }
 
-          console.log(currentBalance.toFixed(10), memberBalance.toFixed(10));
+          // console.log(currentBalance.toFixed(10), memberBalance.toFixed(10));
         }, 1000);
       }
 
@@ -179,15 +152,15 @@
         updateMember();
       }
       function updateMember() {
-        console.log(activeNum);
+        // console.log(activeNum);
         payroll.payroll(activeNum, function(err, res) {
-          console.log(res);
+          // console.log(res);
           document.getElementById("activeNum").textContent = activeNum;
           document.getElementById("initials").textContent = res[3];
           memberBalanceSpeed = res[1].toFixed() / 1000000000000000000;
           memberAddress = res[0];
           payroll.getAmountOwed(memberAddress, function(err, res) {
-            console.log(res);
+            // console.log(res);
             memberBalance = res.toFixed() / 1000000000000000000;
           });
         });
@@ -317,7 +290,7 @@
   </head>
   <body>
     <div class="content">
-      <h2>Team Balance</h2>
+      <h2>Available Funds</h2>
       <h1 id="countup">loading...</h1>
 
       <button id="payEveryone">PAY EVERYONE</button>
@@ -340,6 +313,13 @@
           next
         </button>
       </dl>
+
+      <a href="https://oneclickdapp.com/oscar-dynasty/"> One Click Dapp </a> : :
+      <a
+        href="https://etherscan.io/address/0xbec64108259656f62e0e1af690553436250262bf#readContract"
+      >
+        Etherscan</a
+      >
     </div>
 
     <script type="text/javascript">
