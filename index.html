@@ -115,6 +115,7 @@
               balanceSpeed =
                 (currentBalance - lastBalance) /
                 (new Date().getTime() - lastUpdate);
+              balanceSpeed = Math.max(balanceSpeed, 0);
               lastBalance = currentBalance;
               lastUpdate = new Date().getTime();
             });
